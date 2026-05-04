@@ -13,24 +13,26 @@ public sealed class AddCardHandler
         _cardRepository = cardRepository;
     }
 
-    public Card Handle(string name, string currencyRaw, decimal? initialBalance)
+    public Card AddCard(string name, string currencyInput, decimal? initialBalance)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new InvalidOperationException("Card name cannot be empty.");
         }
 
-        if (!Enum.TryParse<Currency>(currencyRaw, true, out var currency))
+        if (!Enum.TryParse<Currency>(currencyInput, true, out var currency))
         {
             throw new InvalidOperationException("Unknown currency. Allowed: RUB, EUR.");
         }
-
+                   
+        var isFirstCard = _cardRepository.GetAll().Count == 0;
+        
         var card = new Card
         {
             Name = name,
             Currency = currency,
             InitialBalance = initialBalance ?? 0m,
-            IsDefault = _cardRepository.GetAll().Count == 0
+            IsDefault = isFirstCard
         };
 
         return _cardRepository.Add(card);
