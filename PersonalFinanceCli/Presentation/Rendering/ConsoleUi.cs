@@ -582,7 +582,7 @@ public sealed class ConsoleUi
             case TransactionAddCommand trx:
                 if (trx.Type == TransactionType.Income)
                 {
-                    _addIncomeHandler.Handle(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
+                    _addIncomeHandler.Addincome(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
                 }
                 else
                 {
