@@ -15,31 +15,41 @@ public sealed class JsonLimitRepository : ILimitRepository
 
     public DailyLimit? GetByDate(DateOnly date)
     {
-        return _store.Load().DailyLimits.FirstOrDefault(x => x.Date == date);
+         var data = _store.Load();
+
+        return data.DailyLimits
+            .FirstOrDefault(limit => limit.Date == date);
     }
 
     public DailyLimit Upsert(DateOnly date, decimal amount, Currency currency)
     {
         var data = _store.Load();
-        var existing = data.DailyLimits.FirstOrDefault(x => x.Date == date);
-        if (existing is null)
+
+        var existingLimit = data.DailyLimits
+        .FirstOrDefault(x => x.Date == date);
+        if (existingLimit is null)
         {
-            existing = new DailyLimit
+            existingLimit = new DailyLimit
             {
-                Id = data.DailyLimits.Count == 0 ? 1 : data.DailyLimits.Max(x => x.Id) + 1,
+                Id = data.DailyLimits.Count == 0 
+                ? 1 
+                : data.DailyLimits.Max(x => x.Id) + 1,
+                
                 Date = date,
                 Amount = amount,
                 Currency = currency
             };
-            data.DailyLimits.Add(existing);
+            
+            data.DailyLimits.Add(existingLimit);
         }
         else
         {
-            existing.Amount = amount;
-            existing.Currency = currency;
+            existingLimit.Amount = amount;
+            existingLimit.Currency = currency;
         }
 
         _store.Save(data);
-        return existing;
+        
+        return existingLimit;
     }
 }
