@@ -18,9 +18,9 @@ public sealed class CommandParserTests
     {
         var parser = new CommandParser();
 
-        var cmd = parser.Parse("expense add 12.50 \"Food\" --card 3 --date 2026-03-01 --note \"dinner out\"");
+        var command = parser.Parse("expense add 12.50 \"Food\" --card 3 --date 2026-03-01 --note \"dinner out\"");
 
-        var typed = Assert.IsType<TransactionAddCommand>(cmd);
+        var typed = Assert.IsType<TransactionAddCommand>(command);
         Assert.Equal(TransactionType.Expense, typed.Type);
         Assert.Equal(12.50m, typed.Amount);
         Assert.Equal("Food", typed.Category);
@@ -54,9 +54,9 @@ public sealed class CommandParserTests
     {
         var parser = new CommandParser();
 
-        var cmd = parser.Parse("income add 5 \"  Salary  \"");
+        var command = parser.Parse("income add 5 \"  Salary  \"");
 
-        var typed = Assert.IsType<TransactionAddCommand>(cmd);
+        var typed = Assert.IsType<TransactionAddCommand>(command);
         Assert.Equal("  Salary  ", typed.Category);
     }
 }
