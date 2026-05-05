@@ -31,8 +31,8 @@ public sealed class CardAndTransactionFlowTests
 
         Assert.Equal(0, app.Run("expense", "add", "10", "Food", "--card", "2"));
 
-        var tx = app.TransactionRepository.GetAll().Single();
-        Assert.Equal(2, tx.CardId);
+        var transaction = app.TransactionRepository.GetAll().Single();
+        Assert.Equal(2, transaction.CardId);
     }
 
     [Fact]
@@ -46,8 +46,8 @@ public sealed class CardAndTransactionFlowTests
 
         Assert.Equal(0, app.Run("income", "add", "100", "Salary"));
 
-        var tx = app.TransactionRepository.GetAll().Single();
-        Assert.Equal(2, tx.CardId);
+        var transaction = app.TransactionRepository.GetAll().Single();
+        Assert.Equal(2, transaction.CardId);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ public sealed class CardAndTransactionFlowTests
 
         Assert.Equal(0, app.Run("expense", "add", "4", "Taxi"));
 
-        var tx = app.TransactionRepository.GetAll().Single();
-        Assert.Equal(1, tx.CardId);
+        var transaction = app.TransactionRepository.GetAll().Single();
+        Assert.Equal(1, transaction.CardId);
     }
 
     [Fact]
