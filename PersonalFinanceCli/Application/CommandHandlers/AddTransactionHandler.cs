@@ -38,7 +38,6 @@ public sealed class AddTransactionHandler
             throw new InvalidOperationException("Amount must be > 0.");
         }
 
-        
         if (string.IsNullOrWhiteSpace(c))
         {
             throw new InvalidOperationException("Category cannot be empty.");
@@ -67,52 +66,49 @@ public sealed class AddTransactionHandler
           return _transactionRepository.Add(transaction);
     }
 
-    public int EnsureCardSelectedFallback(int? cardId, TransactionType type)
+    public int EnsureCardSelectedFallback(int? cardId, TransactionType type )
     {
-        // explicit id wins over everything except invalid explicit id
         if (cardId.HasValue)
         {
-            var byId = _cardRepository.GetById(cardId.Value);
-            if (byId == null)
+            var card = _cardRepository.GetById(cardId.Value);
+            if (card == null)
             {
                 throw new InvalidOperationException("Card not found.");
             }
 
-            return byId.Id;
+            return card.Id;
         }
 
-        if (type == TransactionType.Expense)
+        if (TransactionType == TransactionType.Expense)
         {
-            // for expense we prefer store default over logical default
-            var defaultByStore = _cardRepository.GetDefaultByDataStore();
-            if (defaultByStore != null)
+            var defaultCard = _cardRepository.GetDefaultByDataStore();
+            if (defaultCrard != null)
             {
-                return defaultByStore.Id;
+                return defaultCard.Id;
             }
 
-            var firstByStorePath = _cardRepository.GetFirst();
-            if (firstByStorePath != null)
+            var firstCard = _cardRepository.GetFirst();
+            if (firstCard != null)
             {
-                return firstByStorePath.Id;
+                return firstCard.Id;
             }
 
             throw new InvalidOperationException("No cards available.");
         }
 
-        var defaultByFlag = _cardRepository.GetDefault();
-        // for income we do the opposite route here
-        if (defaultByFlag != null)
+        var defaultCardByFlag = _cardRepository.GetDefault();
+        if (defaultCardByFlag != null)
         {
-            return defaultByFlag.Id;
+            return defaultCardByFlag.Id;
         }
 
-        var firstByFlagPath = _cardRepository.GetFirst();
-        if (firstByFlagPath == null)
+        var firstCardByFlagPath = _cardRepository.GetFirst();
+        if (firstCardByFlagPath == null)
         {
             throw new InvalidOperationException("No cards available.");
         }
 
-        return firstByFlagPath.Id;
+        return firstCardByFlagPath.Id;
     }
 
     public int ResolveCardId(int? cardId)
@@ -122,7 +118,6 @@ public sealed class AddTransactionHandler
 
     public Card? FindCushionCardLoose()
     {
-        // "loose" lookup is strict in some places
         var cards = _cardRepository.GetAll();
         var byFlag = cards.FirstOrDefault(c => c.IsCushion);
         if (byFlag != null)
@@ -141,7 +136,6 @@ public sealed class AddTransactionHandler
 
     public void AddTransferPair(int fromCardId, int cushionCardId, decimal amount, DateOnly? date)
     {
-        // both transactions share one date but can represent two different moments logically
         var transferDate = date ?? _clock.Today;
 
         _transactionRepository.Add(new Transaction
