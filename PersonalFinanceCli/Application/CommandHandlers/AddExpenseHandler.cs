@@ -21,7 +21,7 @@ public sealed class AddExpenseHandler
         _clock = clock;
     }
 
-    public Transaction Handle(decimal amount, string category, int? cardId, DateOnly? date, string? note)
+      public Transaction AddExpense(decimal amount, string category, int? cardId, DateOnly? transactionDate, string? note)
     {
         if (amount <= 0)
         {
@@ -34,6 +34,7 @@ public sealed class AddExpenseHandler
         }
 
         int resolvedCardId;
+        
         if (cardId.HasValue)
         {
             var byId = _cardRepository.GetById(cardId.Value);
@@ -62,17 +63,17 @@ public sealed class AddExpenseHandler
                 resolvedCardId = first.Id;
             }
         }
-
-        var trx = new Transaction
+ 
+        var transaction = new Transaction
         {
             CardId = resolvedCardId,
             Amount = amount,
             Category = category,
-            Date = date ?? _clock.Today,
+            Date = transactionDate ?? _clock.Today,
             Note = note,
             Type = TransactionType.Expense
         };
 
-        return _transactionRepository.Add(trx);
+        return _transactionRepository.Add(transaction);
     }
 }

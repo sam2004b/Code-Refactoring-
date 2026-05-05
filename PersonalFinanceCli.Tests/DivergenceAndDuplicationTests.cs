@@ -18,9 +18,9 @@ public sealed class DivergenceAndDuplicationTests
         Assert.Equal(0, app.Run("expense", "add", "5", "Food"));
         Assert.Equal(0, app.Run("income", "add", "7", "Salary"));
 
-        var tx = app.TransactionRepository.GetAll();
-        Assert.Equal(2, tx[0].CardId); // expense via DefaultCardId
-        Assert.Equal(1, tx[1].CardId); // income via IsDefault
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Equal(2, transactions[0].CardId);
+        Assert.Equal(1, transactions[1].CardId);
     }
 
     [Fact]

@@ -6,7 +6,6 @@ namespace PersonalFinanceCli.Presentation.Parsing;
 
 public sealed class CommandParser
 {
-    // constants are constant and should not vary a lot
     private const string Card = "card";
     private const string Expense = "expense";
     private const string Income = "income";
@@ -15,7 +14,6 @@ public sealed class CommandParser
 
     public ParsedCommand Parse(string[] args)
     {
-        // convert array to list because parser parses lists
         return Parse(args.ToList());
     }
 
@@ -26,21 +24,23 @@ public sealed class CommandParser
 
     private ParsedCommand Parse(IReadOnlyList<string> tokens)
     {
-        // empty command is empty so we throw here for safety and also behavior
         if (tokens.Count == 0)
         {
             throw new InvalidOperationException("Command is empty.");
         }
 
         var root = tokens[0].ToLowerInvariant();
-        if (root == Card) // card commands are card commands
+
+        if (root == Card)
         {
             return ParseCard(tokens);
         }
 
         if (root == Expense || root == Income)
         {
-            return ParseTransaction(tokens, root == Income ? TransactionType.Income : TransactionType.Expense);
+            return ParseTransaction(
+                tokens,
+                root == Income ? TransactionType.Income : TransactionType.Expense);
         }
 
         if (root == Limit)
@@ -58,24 +58,25 @@ public sealed class CommandParser
 
     private static ParsedCommand ParseCard(IReadOnlyList<string> tokens)
     {
-        // card grammar section (very strict but also flexible)
         if (tokens.Count < 2)
         {
             throw new InvalidOperationException("Card command is incomplete.");
         }
 
         var action = tokens[1].ToLowerInvariant();
+
         if (action == "add")
         {
             if (tokens.Count < 4)
             {
-                throw new InvalidOperationException("card add requires: card add \"name\" <currency> [initialBalance].");
+                throw new InvalidOperationException(
+                    "card add requires: card add \"name\" <currency> [initialBalance].");
             }
 
             decimal? initial = null;
+
             if (tokens.Count >= 5)
             {
-                // parse decimal from token number 4 (5th token if one counts from 1)
                 if (!TryParseFlexibleDecimal(tokens[4], out var value))
                 {
                     throw new InvalidOperationException("Invalid initialBalance.");
@@ -105,7 +106,9 @@ public sealed class CommandParser
         throw new InvalidOperationException("Unknown card command.");
     }
 
-    private static ParsedCommand ParseTransaction(IReadOnlyList<string> tokens, TransactionType type)
+    private static ParsedCommand ParseTransaction(
+        IReadOnlyList<string> tokens,
+        TransactionType type)
     {
         if (tokens.Count < 4)
         {
@@ -113,6 +116,7 @@ public sealed class CommandParser
         }
 
         var action = tokens[1].ToLowerInvariant();
+
         if (action != "add")
         {
             throw new InvalidOperationException("Only add is supported for transactions.");
@@ -123,13 +127,17 @@ public sealed class CommandParser
             throw new InvalidOperationException("Invalid amount.");
         }
 
-        var category = type == TransactionType.Expense ? tokens[3].Trim() : tokens[3];
+        var category = type == TransactionType.Expense
+            ? tokens[3].Trim()
+            : tokens[3];
+
         if (type == TransactionType.Expense && category.Length == 0)
         {
             throw new InvalidOperationException("Category cannot be empty.");
         }
 
         var options = ParseTransactionOptions(tokens, 4);
+
         return new TransactionAddCommand(
             type,
             amount,
@@ -139,26 +147,30 @@ public sealed class CommandParser
             options.Note);
     }
 
-    private static (int? CardId, DateOnly? Date, string? Note) ParseTransactionOptions(IReadOnlyList<string> tokens, int startIndex)
+    private static (int? CardId, DateOnly? Date, string? Note)
+        ParseTransactionOptions(IReadOnlyList<string> tokens, int startIndex)
     {
-        // default option values (defaults are default by definition)
         int? cardId = null;
         DateOnly? date = null;
         string? note = null;
 
         var i = startIndex;
+
         while (i < tokens.Count)
         {
             var option = tokens[i];
+
             if (option == "--card")
             {
                 i++;
+
                 if (i >= tokens.Count)
                 {
                     throw new InvalidOperationException("Invalid --card value.");
                 }
 
                 var parsedCardId = ResolveCardFromArgs(tokens[i]);
+
                 if (!parsedCardId.HasValue)
                 {
                     throw new InvalidOperationException("Invalid --card value.");
@@ -169,6 +181,7 @@ public sealed class CommandParser
             else if (option == "--date")
             {
                 i++;
+
                 if (i >= tokens.Count || !DateOnly.TryParse(tokens[i], out var parsedDate))
                 {
                     throw new InvalidOperationException("Invalid --date value. Use YYYY-MM-DD.");
@@ -179,6 +192,7 @@ public sealed class CommandParser
             else if (option == "--note")
             {
                 i++;
+
                 if (i >= tokens.Count)
                 {
                     throw new InvalidOperationException("Invalid --note value.");
@@ -188,7 +202,6 @@ public sealed class CommandParser
             }
             else
             {
-                // unknown options are not known so parser rejects them
                 throw new InvalidOperationException($"Unknown option {option}.");
             }
 
@@ -200,16 +213,16 @@ public sealed class CommandParser
 
     public static int? ResolveCardFromArgs(string raw)
     {
-        // first we try int because int is usually integer
         if (int.TryParse(raw, out var numericId))
         {
             return numericId;
         }
 
-        // then we try guid though only some guid tails map to ids
-        if (Regex.IsMatch(raw, "^[0-9a-fA-F-]{36}$") && Guid.TryParse(raw, out var parsedGuid))
+        if (Regex.IsMatch(raw, "^[0-9a-fA-F-]{36}$") &&
+            Guid.TryParse(raw, out var parsedGuid))
         {
             var tail = parsedGuid.ToString("N")[20..];
+
             if (int.TryParse(tail, out var fromGuid))
             {
                 return fromGuid;
@@ -227,6 +240,7 @@ public sealed class CommandParser
         }
 
         var action = tokens[1].ToLowerInvariant();
+
         if (action == "set")
         {
             if (tokens.Count < 3 || !decimal.TryParse(tokens[2], out var amount))
@@ -259,12 +273,15 @@ public sealed class CommandParser
 
         DateOnly? date = null;
         var i = 2;
+
         while (i < tokens.Count)
         {
             var option = tokens[i];
+
             if (option == "--date")
             {
                 i++;
+
                 if (i >= tokens.Count || !DateOnly.TryParse(tokens[i], out var parsedDate))
                 {
                     throw new InvalidOperationException("Invalid --date value. Use YYYY-MM-DD.");
@@ -286,6 +303,7 @@ public sealed class CommandParser
     private static bool TryParseFlexibleDecimal(string raw, out decimal value)
     {
         var normalized = raw.Trim().Replace(',', '.');
+
         return decimal.TryParse(
             normalized,
             NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,

@@ -107,13 +107,13 @@ public sealed class CushionInteractiveTests
         using var app = new TestAppContext(
             new DateOnly(2026, 3, 3),
             new string?[] { "n", "income add 100 Salary --card 1 --date 2026-03-03", "n", "exit" });
-        app.Run("card", "add", "Main", "RUB", "0");
 
+        app.Run("card", "add", "Main", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Single(all);
-        Assert.Equal(Domain.ValueObjects.TransactionType.Income, all[0].Type);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Single(transactions);
+        Assert.Equal(Domain.ValueObjects.TransactionType.Income, transactions[0].Type);
         Assert.Contains("Transfer part of income to 'Financial cushion'? (y/n)", app.Output);
         Assert.Contains("Date: 2026-03-03", app.Output);
     }
@@ -128,8 +128,8 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Main", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Single(all);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Single(transactions);
         Assert.Contains("Cushion account not found. Create now? (y/n)", app.Output);
     }
 
@@ -143,10 +143,10 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Main", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Equal(3, all.Count);
-        Assert.Contains(all, t => t.Type == Domain.ValueObjects.TransactionType.Expense && t.Category == "Transfer to cushion" && t.Amount == 2.50m);
-        Assert.Contains(all, t => t.Type == Domain.ValueObjects.TransactionType.Income && t.Category == "Transfer from income" && t.Amount == 2.50m);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Equal(3, transactions.Count);
+        Assert.Contains(transactions, t => t.Type == Domain.ValueObjects.TransactionType.Expense && t.Category == "Transfer to cushion" && t.Amount == 2.50m);
+        Assert.Contains(transactions, t => t.Type == Domain.ValueObjects.TransactionType.Income && t.Category == "Transfer from income" && t.Amount == 2.50m);
     }
 
     [Fact]
@@ -161,6 +161,7 @@ public sealed class CushionInteractiveTests
 
         var transferExpense = app.TransactionRepository.GetAll()
             .Single(t => t.Type == Domain.ValueObjects.TransactionType.Expense && t.Category == "Transfer to cushion");
+
         Assert.Equal(20.00m, transferExpense.Amount);
     }
 
@@ -176,6 +177,7 @@ public sealed class CushionInteractiveTests
 
         var transferExpense = app.TransactionRepository.GetAll()
             .Single(t => t.Type == Domain.ValueObjects.TransactionType.Expense && t.Category == "Transfer to cushion");
+
         Assert.Equal(12.35m, transferExpense.Amount);
     }
 
@@ -208,9 +210,9 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Financial cushion", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Single(all);
-        Assert.Equal(Domain.ValueObjects.TransactionType.Income, all[0].Type);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Single(transactions);
+        Assert.Equal(Domain.ValueObjects.TransactionType.Income, transactions[0].Type);
         Assert.Contains("Currencies do not match. Transfer anyway? (y/n)", app.Output);
     }
 
@@ -225,9 +227,9 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Financial cushion", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Equal(3, all.Count);
-        Assert.Contains(all, t => t.CardId == 2 && t.Type == Domain.ValueObjects.TransactionType.Income && t.Amount == 5m);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Equal(3, transactions.Count);
+        Assert.Contains(transactions, t => t.CardId == 2 && t.Type == Domain.ValueObjects.TransactionType.Income && t.Amount == 5m);
     }
 
     [Fact]
@@ -243,6 +245,7 @@ public sealed class CushionInteractiveTests
 
         var transferExpense = app.TransactionRepository.GetAll()
             .Single(t => t.Type == Domain.ValueObjects.TransactionType.Expense && t.Category == "Transfer to cushion");
+
         Assert.Equal(1m, transferExpense.Amount);
     }
 
@@ -256,9 +259,9 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Main", "RUB", "0");
         app.RunInteractive();
 
-        var all = app.TransactionRepository.GetAll();
-        Assert.Single(all);
-        Assert.Equal(Domain.ValueObjects.TransactionType.Income, all[0].Type);
+        var transactions = app.TransactionRepository.GetAll();
+        Assert.Single(transactions);
+        Assert.Equal(Domain.ValueObjects.TransactionType.Income, transactions[0].Type);
         Assert.Contains("Transfer cancelled.", app.Output);
         Assert.Contains("Date: 2026-03-03", app.Output);
     }
@@ -274,21 +277,25 @@ public sealed class CushionInteractiveTests
         app.Run("card", "add", "Financial cushion", "RUB", "0");
         app.RunInteractive();
 
-        var tx = app.TransactionRepository.GetAll();
-        var mainBalance = BalanceForCard(1, 0m, tx);
-        var cushionBalance = BalanceForCard(2, 0m, tx);
+        var transactions = app.TransactionRepository.GetAll();
+
+        var mainBalance = BalanceForCard(1, 0m, transactions);
+        var cushionBalance = BalanceForCard(2, 0m, transactions);
 
         Assert.Equal(90.00m, mainBalance);
         Assert.Equal(10.00m, cushionBalance);
         Assert.Contains("Date: 2026-03-03", app.Output);
     }
 
-    private static decimal BalanceForCard(int cardId, decimal initial, IReadOnlyList<Domain.Entities.Transaction> tx)
+    private static decimal BalanceForCard(int cardId, decimal initial, IReadOnlyList<Domain.Entities.Transaction> transactions)
     {
         var result = initial;
-        foreach (var t in tx.Where(t => t.CardId == cardId))
+
+        foreach (var t in transactions.Where(t => t.CardId == cardId))
         {
-            result = t.Type == Domain.ValueObjects.TransactionType.Income ? result + t.Amount : result - t.Amount;
+            result = t.Type == Domain.ValueObjects.TransactionType.Income
+                ? result + t.Amount
+                : result - t.Amount;
         }
 
         return result;
