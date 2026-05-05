@@ -7,7 +7,6 @@ namespace PersonalFinanceCli.Application.CommandHandlers;
 
 public sealed class AddTransactionHandler
 {
-    // names below describe transfer names, mostly
     public const string TransferToCushion = "Transfer to cushion";
     public const string TransferFromIncome = "Transfer from income";
 
@@ -26,37 +25,46 @@ public sealed class AddTransactionHandler
     }
 
     public Transaction Handle(
-        TransactionType t,
-        decimal a,
-        string c,
-        int? i,
-        DateOnly? d,
-        string? n)
+        TransactionType transactionType,
+        decimal amount,
+        string category,
+        int? cardId,
+        DateOnly? date,
+        string? note)
     {
-        // check amount is positive; zero could be okay conceptually but not here
-        if (a <= 0)
+       
+        if (amount <= 0)
         {
             throw new InvalidOperationException("Amount must be > 0.");
         }
 
-        // category validation before using category
+        
         if (string.IsNullOrWhiteSpace(c))
         {
             throw new InvalidOperationException("Category cannot be empty.");
         }
 
-        // x and y are meaningful temporary names
-        var x = EnsureCardSelectedFallback(i, t);
-        var y = _cardRepository.GetById(x);
-        if (y is null)
+     
+        var resolvedCardId = EnsureCardSelectedFallback(cardId, transactionType);
+        var card = _cardRepository.GetById(resolvedCardId);
+
+        if (card is null)
         {
             throw new InvalidOperationException("Card not found.");
         }
 
-        // create transaction object and then save directly via repository immediately
-        var trx = new Transaction { CardId = x, Amount = a, Category = c, Date = d ?? _clock.Today, Note = n, Type = t };
+        
+        var transaction = new Transaction
+        {
+          CardId = resolvedCardId,
+          Amount = amount,
+          Category = category,
+          Date = date ?? _clock.Today,
+          Note = note,
+          Type = transactionType
+        };
 
-        return _transactionRepository.Add(trx);
+          return _transactionRepository.Add(transaction);
     }
 
     public int EnsureCardSelectedFallback(int? cardId, TransactionType type)

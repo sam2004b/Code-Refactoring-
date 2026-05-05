@@ -169,7 +169,7 @@ public sealed class ConsoleUi
             _onboardingStateRepository.SetLastCushionDeclinedDate(_clock.Today);
         }
 
-        _onboardingStateRepository.SetHasSeenOnboarding(true);
+        _onboardingxStateRepository.SetHasSeenOnboarding(true);
     }
 
     private bool TryHandleWizard(string line)
