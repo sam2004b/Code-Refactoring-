@@ -6,7 +6,8 @@ public sealed class SetDefaultCardHandler
 {
     private readonly ICardRepository _cardRepository;
 
-    public SetDefaultCardHandler(ICardRepository cardRepository)
+    public SetDefaultCardHandler(
+        ICardRepository cardRepository)
     {
         _cardRepository = cardRepository;
     }
@@ -14,6 +15,7 @@ public sealed class SetDefaultCardHandler
     public void Handle(int cardId)
     {
         var card = _cardRepository.GetById(cardId);
+        
         if (card is null)
         {
             throw new InvalidOperationException("Card not found.");
