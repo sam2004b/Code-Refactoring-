@@ -5,7 +5,6 @@ namespace PersonalFinanceCli.Infrastructure.Persistence;
 
 public sealed class JsonDataStore
 {
-    
     private readonly string _filePath;
     private readonly JsonSerializerOptions _options;
 
@@ -22,30 +21,23 @@ public sealed class JsonDataStore
 
     public DataFile Load()
     {
-        
         if (!File.Exists(_filePath))
         {
-            var emptyData = new DataFile();
-            Save(emptyData);
-            return emptyData;
+            return CreateEmptyDataFile();
         }
 
         var json = File.ReadAllText(_filePath);
 
         if (string.IsNullOrWhiteSpace(json))
         {
-            var emptyData = new DataFile();
-            Save(emptyData);
-            return emptyData;
+            return CreateEmptyDataFile();
         }
 
         var result = JsonSerializer.Deserialize<DataFile>(json, _options);
-        
+
         if (result == null)
         {
-            var emptyData = new DataFile();
-            Save(emptyData);
-            return emptyData;
+            return CreateEmptyDataFile();
         }
 
         result.Cards ??= new List<Card>();
@@ -67,5 +59,14 @@ public sealed class JsonDataStore
         var json = JsonSerializer.Serialize(data, _options);
 
         File.WriteAllText(_filePath, json);
+    }
+
+    private DataFile CreateEmptyDataFile()
+    {
+        var emptyData = new DataFile();
+
+        Save(emptyData);
+
+        return emptyData;
     }
 }
