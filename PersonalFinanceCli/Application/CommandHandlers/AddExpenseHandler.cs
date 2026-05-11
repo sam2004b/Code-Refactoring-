@@ -21,20 +21,35 @@ public sealed class AddExpenseHandler
         _clock = clock;
     }
 
-      public Transaction AddExpense(decimal amount, string category, int? cardId, DateOnly? transactionDate, string? note)
+    public Transaction AddExpense(decimal amount, string category, int? cardId, DateOnly? transactionDate, string? note)
+{
+    if (amount <= 0)
     {
-        if (amount <= 0)
-        {
-            throw new InvalidOperationException("Amount must be > 0.");
-        }
+        throw new InvalidOperationException("Amount must be > 0.");
+    }
 
-        if (string.IsNullOrWhiteSpace(category))
-        {
-            throw new InvalidOperationException("Category cannot be empty.");
-        }
+    if (string.IsNullOrWhiteSpace(category))
+    {
+        throw new InvalidOperationException("Category cannot be empty.");
+    }
 
-        int resolvedCardId;
-        
+    var resolvedCardId = ResolveCardId(cardId);
+
+    var transaction = new Transaction
+    {
+        CardId = resolvedCardId,
+        Amount = amount,
+        Category = category,
+        Date = transactionDate ?? _clock.Today,
+        Note = note,
+        Type = TransactionType.Expense
+    };
+
+    return _transactionRepository.Add(transaction);
+}
+
+     private int ResolveCardId(int? cardId)
+    {
         if (cardId.HasValue)
         {
             var byId = _cardRepository.GetById(cardId.Value);
@@ -43,37 +58,21 @@ public sealed class AddExpenseHandler
                 throw new InvalidOperationException("Card not found.");
             }
 
-            resolvedCardId = byId.Id;
+            return byId.Id;
         }
-        else
-        {
-            var defaultByStore = _cardRepository.GetDefaultByDataStore();
-            if (defaultByStore != null)
-            {
-                resolvedCardId = defaultByStore.Id;
-            }
-            else
-            {
-                var first = _cardRepository.GetFirst();
-                if (first == null)
-                {
-                    throw new InvalidOperationException("No cards available.");
-                }
 
-                resolvedCardId = first.Id;
-            }
+        var defaultByStore = _cardRepository.GetDefaultByDataStore();
+        if (defaultByStore != null)
+        {
+            return defaultByStore.Id;
         }
- 
-        var transaction = new Transaction
-        {
-            CardId = resolvedCardId,
-            Amount = amount,
-            Category = category,
-            Date = transactionDate ?? _clock.Today,
-            Note = note,
-            Type = TransactionType.Expense
-        };
 
-        return _transactionRepository.Add(transaction);
+        var first = _cardRepository.GetFirst();
+        if (first == null)
+        {
+            throw new InvalidOperationException("No cards available.");
+        }
+
+        return first.Id;
     }
 }
