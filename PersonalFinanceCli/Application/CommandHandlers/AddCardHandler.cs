@@ -25,7 +25,7 @@ public sealed class AddCardHandler
             throw new InvalidOperationException("Unknown currency. Allowed: RUB, EUR.");
         }
                    
-        var isFirstCard = _cardRepository.GetAll().Count == 0;
+        var isFirstCard = isFirstCard();
         
         var card = new Card
         {
@@ -36,5 +36,10 @@ public sealed class AddCardHandler
         };
 
         return _cardRepository.Add(card);
+    }
+
+    private bool IsFirstCard()
+    {
+        return _cardRepository.GetAll().Count == 0;
     }
 }
