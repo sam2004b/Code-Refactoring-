@@ -25,7 +25,7 @@ public sealed class AddCardHandler
             throw new InvalidOperationException("Unknown currency. Allowed: RUB, EUR.");
         }
                    
-        var isFirstCard = isFirstCard();
+        var isFirstCard = IsFirstCard();
         
         var card = new Card
         {

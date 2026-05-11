@@ -169,7 +169,7 @@ public sealed class ConsoleUi
             _onboardingStateRepository.SetLastCushionDeclinedDate(_clock.Today);
         }
 
-        _onboardingxStateRepository.SetHasSeenOnboarding(true);
+        _onboardingStateRepository.SetHasSeenOnboarding(true);
     }
 
     private bool TryHandleWizard(string line)
@@ -299,7 +299,7 @@ public sealed class ConsoleUi
             var date = options.Date ?? AskOptionalDate(null, "Date? (YYYY-MM-DD, enter = today)");
 
             var sourceCardId = _addTransactionHandler.ResolveCardId(cardId);
-            _addIncomeHandler.Handle(amount, category, sourceCardId, date, options.Note);
+           _addIncomeHandler.AddIncome(amount, category, sourceCardId, date, options.Note);
 
             HandleOptionalCushionTransfer(amount, category, sourceCardId, date);
 
@@ -582,7 +582,7 @@ public sealed class ConsoleUi
             case TransactionAddCommand trx:
                 if (trx.Type == TransactionType.Income)
                 {
-                    _addIncomeHandler.Addincome(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
+                 _addIncomeHandler.AddIncome(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);   
                 }
                 else
                 {
