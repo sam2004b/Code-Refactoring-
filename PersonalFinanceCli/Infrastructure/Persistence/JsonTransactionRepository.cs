@@ -14,15 +14,25 @@ public sealed class JsonTransactionRepository : ITransactionRepository
 
     public IReadOnlyList<Transaction> GetAll()
     {
-        return _store.Load().Transactions.OrderBy(t => t.Id).ToList();
+       var data = _store.Load();
+
+        return data.Transactions
+            .OrderBy(transaction => transaction.Id)
+            .ToList();
     }
 
     public Transaction Add(Transaction transaction)
     {
         var data = _store.Load();
-        transaction.Id = data.Transactions.Count == 0 ? 1 : data.Transactions.Max(t => t.Id) + 1;
+        
+        transaction.Id = data.Transactions.Count == 0 
+        ? 1 
+        : data.Transactions.Max(t => t.Id) + 1;
+        
         data.Transactions.Add(transaction);
+        
         _store.Save(data);
+        
         return transaction;
     }
 }

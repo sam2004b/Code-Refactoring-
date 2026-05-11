@@ -256,7 +256,7 @@ public sealed class ConsoleUi
             var cardId = ResolveCardWizard(options.CardRaw, "Card? (enter to use default, id or name)");
             var date = options.Date ?? AskOptionalDate(null, "Date? (YYYY-MM-DD, enter = today)");
 
-            _addExpenseHandler.Handle(amount, category, cardId, date, options.Note);
+            _addExpenseHandler.AddExpense(amount, category, cardId, date, options.Note);
 
             var dailyReport = _dailyReportService.Generate(_clock.Today);
             _reportPrinter.Print(dailyReport);
@@ -299,7 +299,7 @@ public sealed class ConsoleUi
             var date = options.Date ?? AskOptionalDate(null, "Date? (YYYY-MM-DD, enter = today)");
 
             var sourceCardId = _addTransactionHandler.ResolveCardId(cardId);
-            _addIncomeHandler.Handle(amount, category, sourceCardId, date, options.Note);
+           _addIncomeHandler.AddIncome(amount, category, sourceCardId, date, options.Note);
 
             HandleOptionalCushionTransfer(amount, category, sourceCardId, date);
 
@@ -569,7 +569,7 @@ public sealed class ConsoleUi
         switch (command)
         {
             case CardAddCommand add:
-                _addCardHandler.Handle(add.Name, add.Currency, add.InitialBalance);
+                _addCardHandler.AddCard(add.Name, add.Currency, add.InitialBalance);
                 stateChanged = true;
                 break;
             case CardListCommand:
@@ -582,11 +582,11 @@ public sealed class ConsoleUi
             case TransactionAddCommand trx:
                 if (trx.Type == TransactionType.Income)
                 {
-                    _addIncomeHandler.Handle(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
+                 _addIncomeHandler.AddIncome(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);   
                 }
                 else
                 {
-                    _addExpenseHandler.Handle(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
+                    _addExpenseHandler.AddExpense(trx.Amount, trx.Category, trx.CardId, trx.Date, trx.Note);
                 }
 
                 stateChanged = true;

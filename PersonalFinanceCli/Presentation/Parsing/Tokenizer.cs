@@ -6,13 +6,13 @@ public static class Tokenizer
 {
     public static IReadOnlyList<string> Tokenize(string commandLine)
     {
-        var result = new List<string>();
+        var tokens = new List<string>();
         if (string.IsNullOrWhiteSpace(commandLine))
         {
-            return result;
+            return tokens;
         }
 
-        var sb = new StringBuilder();
+        var currentToken = new StringBuilder();
         var inQuotes = false;
 
         foreach (var ch in commandLine)
@@ -22,26 +22,25 @@ public static class Tokenizer
                 inQuotes = !inQuotes;
                 continue;
             }
-
             if (char.IsWhiteSpace(ch) && !inQuotes)
             {
-                if (sb.Length > 0)
+                if (currentToken.Length > 0)
                 {
-                    result.Add(sb.ToString());
-                    sb.Clear();
+                    tokens.Add(currentToken.ToString());
+                    currentToken.Clear();
                 }
             }
             else
             {
-                sb.Append(ch);
+                currentToken.Append(ch);
             }
         }
 
-        if (sb.Length > 0)
+        if (currentToken.Length > 0)
         {
-            result.Add(sb.ToString());
+            tokens.Add(currentToken.ToString());
         }
 
-        return result;
+        return tokens;
     }
 }

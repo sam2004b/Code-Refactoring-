@@ -106,8 +106,8 @@ public sealed class InteractiveConsoleUiTests
 
         app.RunInteractive();
 
-        var trx = app.TransactionRepository.GetAll().Single();
-        Assert.Equal(2, trx.CardId);
+        var transaction = app.TransactionRepository.GetAll().Single();
+        Assert.Equal(2, transaction.CardId);
     }
 
     [Fact]

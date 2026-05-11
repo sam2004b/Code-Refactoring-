@@ -12,32 +12,80 @@ public static class Program
 {
     public static int Main(string[] args)
     {
-        // main method starts when app starts, usually
-        var console = new SystemConsole();
-        // this is a file path and we use json because json is text
-        var dataPath = Path.Combine(Directory.GetCurrentDirectory(), "data.json");
+        var ui = CreateConsoleUi();
 
-        // repositories are here to keep repository things
+        if (args.Length > 0)
+        {
+            return ui.Execute(args);
+        }
+
+        ui.RunInteractiveLoop();
+
+        return 0;
+    }
+
+    private static ConsoleUi CreateConsoleUi()
+    {
+        var console = new SystemConsole();
+
+        var dataPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "data.json");
+
         var store = new JsonDataStore(dataPath);
+
         var cardRepository = new JsonCardRepository(store);
         var transactionRepository = new JsonTransactionRepository(store);
         var limitRepository = new JsonLimitRepository(store);
         var onboardingStateRepository = new JsonOnboardingStateRepository(store);
+
         var clock = new SystemClock();
 
         var parser = new CommandParser();
-        var addCardHandler = new AddCardHandler(cardRepository);
-        var setDefaultCardHandler = new SetDefaultCardHandler(cardRepository);
-        var addTransactionHandler = new AddTransactionHandler(transactionRepository, cardRepository, clock);
-        var addIncomeHandler = new AddIncomeHandler(addTransactionHandler);
-        var addExpenseHandler = new AddExpenseHandler(transactionRepository, cardRepository, clock);
-        var setDailyLimitHandler = new SetDailyLimitHandler(limitRepository, cardRepository, clock);
-        var dailyReportService = new DailyReportService(cardRepository, transactionRepository, limitRepository);
-        var cushionService = new CushionService(cardRepository);
-        var reportPrinter = new ReportPrinter(console.Out, cardRepository, transactionRepository, limitRepository);
 
-        // UI is created before we use it later below
-        var ui = new ConsoleUi(
+        var addCardHandler = new AddCardHandler(cardRepository);
+
+        var setDefaultCardHandler =
+            new SetDefaultCardHandler(cardRepository);
+
+        var addTransactionHandler =
+            new AddTransactionHandler(
+                transactionRepository,
+                cardRepository,
+                clock);
+
+        var addIncomeHandler =
+            new AddIncomeHandler(addTransactionHandler);
+
+        var addExpenseHandler =
+            new AddExpenseHandler(
+                transactionRepository,
+                cardRepository,
+                clock);
+
+        var setDailyLimitHandler =
+            new SetDailyLimitHandler(
+                limitRepository,
+                cardRepository,
+                clock);
+
+        var dailyReportService =
+            new DailyReportService(
+                cardRepository,
+                transactionRepository,
+                limitRepository);
+
+        var cushionService =
+            new CushionService(cardRepository);
+
+        var reportPrinter =
+            new ReportPrinter(
+                console.Out,
+                cardRepository,
+                transactionRepository,
+                limitRepository);
+
+        return new ConsoleUi(
             parser,
             addCardHandler,
             setDefaultCardHandler,
@@ -53,16 +101,5 @@ public static class Program
             clock,
             console,
             cushionService);
-
-        // if there are args then it is non-interactive interactive mode
-        if (args.Length > 0)
-        {
-            return ui.Execute(args);
-        }
-
-        // this loop exits when user exits, or not
-        ui.RunInteractiveLoop();
-        // zero means success except when it does not
-        return 0;
     }
 }
