@@ -12,7 +12,7 @@ public sealed class AddIncomeHandler
         _addTransactionHandler = addTransactionHandler;
     }
 
-    public Transaction Addincome(decimal amount, string category, int? cardId, DateOnly? transactionDate, string? note)
+    public Transaction AddIncome(decimal amount, string category, int? cardId, DateOnly? transactionDate, string? note)
     {
         var incomeTransaction = _addTransactionHandler.Handle(
              TransactionType.Income,

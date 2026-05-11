@@ -32,41 +32,36 @@ public sealed class AddTransactionHandler
         DateOnly? date,
         string? note)
     {
-       
         if (amount <= 0)
         {
             throw new InvalidOperationException("Amount must be > 0.");
         }
 
-        if (string.IsNullOrWhiteSpace(c))
+        if (string.IsNullOrWhiteSpace(category))
         {
             throw new InvalidOperationException("Category cannot be empty.");
         }
 
-     
         var resolvedCardId = EnsureCardSelectedFallback(cardId, transactionType);
-        var card = _cardRepository.GetById(resolvedCardId);
 
+        var card = _cardRepository.GetById(resolvedCardId);
         if (card is null)
         {
             throw new InvalidOperationException("Card not found.");
         }
 
-        
-        var transaction = new Transaction
-        {
-          CardId = resolvedCardId,
-          Amount = amount,
-          Category = category,
-          Date = date ?? _clock.Today,
-          Note = note,
-          Type = transactionType
-        };
+        var transaction = CreateTransaction(
+            resolvedCardId,
+            amount,
+            category,
+            transactionType,
+            date,
+            note);
 
-          return _transactionRepository.Add(transaction);
+        return _transactionRepository.Add(transaction);
     }
 
-    public int EnsureCardSelectedFallback(int? cardId, TransactionType type )
+    public int EnsureCardSelectedFallback(int? cardId, TransactionType type)
     {
         if (cardId.HasValue)
         {
@@ -79,10 +74,10 @@ public sealed class AddTransactionHandler
             return card.Id;
         }
 
-        if (TransactionType == TransactionType.Expense)
+        if (type == TransactionType.Expense)
         {
             var defaultCard = _cardRepository.GetDefaultByDataStore();
-            if (defaultCrard != null)
+            if (defaultCard != null)
             {
                 return defaultCard.Id;
             }
@@ -111,6 +106,25 @@ public sealed class AddTransactionHandler
         return firstCardByFlagPath.Id;
     }
 
+    private Transaction CreateTransaction(
+        int cardId,
+        decimal amount,
+        string category,
+        TransactionType transactionType,
+        DateOnly? date,
+        string? note)
+    {
+        return new Transaction
+        {
+            CardId = cardId,
+            Amount = amount,
+            Category = category,
+            Date = date ?? _clock.Today,
+            Note = note,
+            Type = transactionType
+        };
+    }
+
     public int ResolveCardId(int? cardId)
     {
         return EnsureCardSelectedFallback(cardId, TransactionType.Income);
@@ -119,6 +133,7 @@ public sealed class AddTransactionHandler
     public Card? FindCushionCardLoose()
     {
         var cards = _cardRepository.GetAll();
+
         var byFlag = cards.FirstOrDefault(c => c.IsCushion);
         if (byFlag != null)
         {
