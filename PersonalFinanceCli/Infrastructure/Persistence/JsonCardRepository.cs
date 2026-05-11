@@ -14,31 +14,27 @@ public sealed class JsonCardRepository : ICardRepository
 
     public IReadOnlyList<Card> GetAll()
     {
-        var data = _store.Load();
-          return data.Cards
+        return LoadCards()
             .OrderBy(card => card.Id)
             .ToList();
     }
 
     public Card? GetById(int id)
     {
-        var data = _store.Load();
-
-        return data.Cards
+        return LoadCards()
             .FirstOrDefault(card => card.Id == id);
     }
 
     public Card? GetDefault()
     {
-        var data = _store.Load();
-
-        return data.Cards
+        return LoadCards()
             .FirstOrDefault(card => card.IsDefault);
     }
 
     public Card? GetDefaultByDataStore()
     {
         var data = _store.Load();
+
         if (!data.DefaultCardId.HasValue)
         {
             return null;
@@ -47,25 +43,23 @@ public sealed class JsonCardRepository : ICardRepository
         var id = GuidToCardId(data.DefaultCardId.Value);
 
         return data.Cards
-           .FirstOrDefault(c => c.Id == id);
+            .FirstOrDefault(card => card.Id == id);
     }
 
     public Card? GetFirst()
     {
-         var data = _store.Load();
-        
-        return _store.Load().Cards
-           .OrderBy(c => c.Id)
-           .FirstOrDefault();
+        return LoadCards()
+            .OrderBy(card => card.Id)
+            .FirstOrDefault();
     }
 
     public Card Add(Card card)
     {
         var data = _store.Load();
 
-        card.Id = data.Cards.Count == 0 
-        ? 1 
-        : data.Cards.Max(c => c.Id) + 1;
+        card.Id = data.Cards.Count == 0
+            ? 1
+            : data.Cards.Max(c => c.Id) + 1;
 
         if (data.Cards.Count == 0)
         {
@@ -76,7 +70,7 @@ public sealed class JsonCardRepository : ICardRepository
         data.Cards.Add(card);
 
         _store.Save(data);
-        
+
         return card;
     }
 
@@ -94,21 +88,26 @@ public sealed class JsonCardRepository : ICardRepository
         _store.Save(data);
     }
 
+    private List<Card> LoadCards()
+    {
+        return _store.Load().Cards;
+    }
+
     private static Guid CardIdToGuid(int cardId)
     {
         var raw = cardId.ToString("D12");
-        
+
         return Guid.Parse($"00000000-0000-0000-0000-{raw}");
     }
 
     private static int GuidToCardId(Guid guid)
     {
         var raw = guid.ToString("N");
-        
+
         var tail = raw.Substring(raw.Length - 12, 12);
-        
+
         return int.TryParse(tail, out var result)
-         ? result 
-         : -1;
+            ? result
+            : -1;
     }
 }
